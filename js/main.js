@@ -11,8 +11,22 @@ const browserForm = $('.search-form'); /* Form */
 const buttonForm = $('.find-product');
 let inputBrowser = $('.browser-input');
 let userQuery; /* What the user types */
-// let finalResult;
-// let description;
+
+const productInformation = $('.product__information');
+const productImageLink = $('.product__image');
+const productImage = $('.product__image img');
+const productTitle = $('.product__title');
+const productPrice = $('.product__price');
+const productInstallments = $('.product__installments');
+const productDescriptionParagraph = $('.product__description-paragraph');
+
+let finalResult; /* Search final result */
+let description; /* Description of the product */
+let title; /* Title of the product */
+let link; /* Link of the product */
+let image; /* Image of the product */
+let price; /* Price of the product */
+let installmentsAmount; /* Installments of the product  */
 
 inputBrowser.addEventListener('input', (e) => {
 	userQuery = e.target.value;
@@ -21,47 +35,50 @@ inputBrowser.addEventListener('input', (e) => {
 
 buttonForm.addEventListener('click', (e) => {
 	e.preventDefault();
+    productInstallments.innerText = '';
 	if (userQuery !== undefined && userQuery !== '') {
 		console.log(userQuery);
 		showResults();
 	}
+	inputBrowser.value = '';
 });
 
-function showResults() {
-	fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${userQuery}`)
+async function showResults() {
+	await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${userQuery}`)
 		.then((response) => response.json())
 		.then((json) => {
 			let results = json.results;
 			// results.forEach((result) => {
 			// 	console.log(result.title);
 			// });
-			let title;
-			let link;
-			let image;
-			let price;
-			let installmentsAmount;
-			let finalResult;
 			for (let i = 0; i < results.length; i++) {
 				finalResult = results[0];
 				title = finalResult.title;
 				link = finalResult.permalink;
 				image = finalResult.thumbnail;
 				price = finalResult.price;
-				installmentsAmount = `En ${finalResult.installments.quantity} cuotas de $${finalResult.installments.amount}`;
+				if (finalResult.installments !== null) {
+					installmentsAmount = `En ${finalResult.installments.quantity} cuotas de $${finalResult.installments.amount}`;
+					productInstallments.innerText = `${installmentsAmount}`;
+				}
 			}
 			console.log(finalResult);
 			console.log(title, link, image, price, installmentsAmount);
 		});
-	// await fetch(`https://api.mercadolibre.com/items/${finalResult.id}/description`)
-	// 	.then((response) => response.json())
-	// 	.then((json) => {
-	// 		description = json.plain_text;
-	//         console.log(description);
-	// 	});
+	await fetch(`https://api.mercadolibre.com/items/${finalResult.id}/description`)
+		.then((response) => response.json())
+		.then((json) => {
+			description = json.plain_text;
+			console.log(description);
+		});
+	drawTheBestProduct();
 }
 
-// fetch(`https://api.mercadolibre.com/items/MLA902183360/description`)
-// 	.then((response) => response.json())
-// 	.then((json) => {
-// 		console.log(json.plain_text);
-// 	});
+function drawTheBestProduct() {
+	productInformation.style.display = 'block';
+	productImageLink.href = `${link}`;
+	productImage.src = `${image}`;
+	productTitle.innerText = `${title}`;
+	productPrice.innerText = `$${price}`;
+	productDescriptionParagraph.innerText = `${description}`;
+}
