@@ -1,3 +1,10 @@
+// --- COSAS QUE ME GUSTARIA MEJORAR --- //
+
+/* - PONER UN LOADER HASTA QUE SE CARGUE EL PRODUCTO */
+/* - NO SÉ POR QUE LOS GUIONES Y LAS PALABRAS JUNTAS SE VAN DEL CONTORNO */
+
+// ------------------------------------- //
+
 // --- A way to simplify the selectors to avoid writing them every time i need it --- //
 function $(selector) {
 	return document.querySelector(selector);
@@ -7,11 +14,9 @@ function $$(selector) {
 }
 // ------------------------------------- //
 
-const browserForm = $('.search-form'); /* Form */
+const browserForm = $('.search-form'); /* Form selector */
 const buttonForm = $('.find-product');
-let inputBrowser = $('.browser-input');
-let userQuery; /* What the user types */
-
+const inputBrowser = $('.browser-input');
 const productInformation = $('.product__information');
 const productImageLink = $('.product__image');
 const productImage = $('.product__image img');
@@ -20,12 +25,7 @@ const productPrice = $('.product__price');
 const productInstallments = $('.product__installments');
 const productDescriptionParagraph = $('.product__description-paragraph');
 
-let description; /* Description of the product */
-let title; /* Title of the product */
-let link; /* Link of the product */
-let image; /* Image of the product */
-let price; /* Price of the product */
-let installmentsAmount; /* Installments of the product  */
+let userQuery; /* What the user types */
 
 inputBrowser.addEventListener('input', (e) => {
 	userQuery = e.target.value;
@@ -40,11 +40,18 @@ buttonForm.addEventListener('click', (e) => {
 	inputBrowser.value = '';
 });
 
+let description; /* Description of the product */
+let title; /* Title of the product */
+let link; /* Link of the product */
+let image; /* Image of the product */
+let price; /* Price of the product */
+let installmentsAmount; /* Installments of the product  */
 let prices = []; /* All the product's prices founded */
 let bestPrice; /* The best price of the product's prices founded */
 let results; /* Products coincidences with the user query */
 let bestProductByPrice; /* The cheapest product */
 
+// Function that interacts with the API
 async function showResults() {
 	await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${userQuery}`)
 		.then((response) => response.json())
@@ -77,10 +84,12 @@ async function showResults() {
 	await fetch(`https://api.mercadolibre.com/items/${bestProductByPrice.id}/description`)
 		.then((response) => response.json())
 		.then((json) => {
-			if (results.length === 0) { /* Ver alguna manera para no poner esto otra vez y tirar directamente un error que no ejecute más el código (?) */
+			if (results.length === 0) {
+				/* Ver alguna manera para no poner esto otra vez y tirar directamente un error que no ejecute más el código (?) */
 				return false;
 			}
 			description = json.plain_text;
+			// deleteHyphens(); /* Para borrar los guiones (?) */
 			description !== '' ? (description = json.plain_text) : (description = 'El vendedor no colocó ninguna descripción');
 			drawTheBestProduct();
 		})
@@ -101,21 +110,16 @@ function drawTheBestProduct() {
 	prices = [];
 }
 
-// Se eligió el mejor producto dependiendo si era el más barato
-
-// function noCoincidencesFunction() {
-// 	productInformation.style.display = 'none';
-// 	title = '';
-// 	link = '';
-// 	image = '';
-// 	price = '';
-// 	installmentsAmount = '';
-// 	description = '';
-// 	productImageLink.href = `${link}`;
-// 	productImage.src = `${image}`;
-// 	productTitle.innerText = `${title}`;
-// 	productPrice.innerText = `$${price}`;
-// 	productInstallments.innerText = `${installmentsAmount}`;
-// 	console.log(title, link, image, price, installmentsAmount, description);
+/* Para borrar los guiones (?) */
+// function deleteHyphens() {
+// 	for (let i = 0; i < description.length; i++) {
+// 		if (description[i] === '_') {
+// 			// console.log('chi');
+// 			description[i] = '';
+// 			console.log(description[i]);
+// 		}
+// 	}
+// 	console.log(description);
 // }
 
+// Se eligió el mejor producto dependiendo si era el más barato
