@@ -2,6 +2,8 @@
 
 /* - PONER UN LOADER HASTA QUE SE CARGUE EL PRODUCTO */
 /* - NO SÉ POR QUE LOS GUIONES Y LAS PALABRAS JUNTAS SE VAN DEL CONTORNO */
+/* - NO ENTRA A LOS CATCHS */
+/* - SI HAY ESPACIOS LARGOS NO ENCUENTRA BIEN LOS RESULTADOS */
 
 // ------------------------------------- //
 
@@ -28,13 +30,14 @@ const productDescriptionParagraph = $('.product__description-paragraph');
 let userQuery; /* What the user types */
 
 inputBrowser.addEventListener('input', (e) => {
-	userQuery = e.target.value;
+	userQuery = e.target.value.toLowerCase().trim();
 	console.log(userQuery);
 });
 
 buttonForm.addEventListener('click', (e) => {
 	e.preventDefault();
 	if (userQuery !== undefined && userQuery !== '') {
+		console.log(userQuery);
 		showResults();
 	}
 	inputBrowser.value = '';
@@ -49,29 +52,39 @@ let installmentsAmount; /* Installments of the product  */
 let prices = []; /* All the product's prices founded */
 let bestPrice; /* The best price of the product's prices founded */
 let results; /* Products coincidences with the user query */
+let resultsTitle = []; /* Array with the result's titles */
 let bestProductByPrice; /* The cheapest product */
+
+let coincidences = [];
 
 // Function that interacts with the API
 async function showResults() {
 	await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${userQuery}`)
 		.then((response) => response.json())
 		.then((json) => {
+			prices = [];
+			resultsTitle = [];
+			coincidences = [];
 			results = json.results;
-			if (results.length === 0) {
-				alert('No se han encontrado resultados');
-				productInformation.style.display = 'none';
-				return false;
-			}
-			for (const result of results) {
-				prices.push(result.price);
+			for (let r = 0; r < results.length; r++) {
+				resultsTitle.push(results[r].title.toLowerCase());
+				if (resultsTitle[r].includes(userQuery)) {
+					coincidences.push(results[r]);
+					prices.push(results[r].price);
+				}
 			}
 			prices.sort((a, b) => {
 				return a - b;
 			});
-			for (let i = 0; i < results.length; i++) {
-				bestPrice = results[i].price;
+			if (coincidences.length === 0) {
+				alert('No se han encontrado resultados');
+				productInformation.style.display = 'none';
+				return false;
+			}
+			for (let i = 0; i < coincidences.length; i++) {
+				bestPrice = coincidences[i].price;
 				if (bestPrice === prices[0]) {
-					bestProductByPrice = results[i];
+					bestProductByPrice = coincidences[i];
 					title = bestProductByPrice.title;
 					link = bestProductByPrice.permalink;
 					image = bestProductByPrice.thumbnail;
@@ -84,7 +97,7 @@ async function showResults() {
 	await fetch(`https://api.mercadolibre.com/items/${bestProductByPrice.id}/description`)
 		.then((response) => response.json())
 		.then((json) => {
-			if (results.length === 0) {
+			if (coincidences.length === 0) {
 				/* Ver alguna manera para no poner esto otra vez y tirar directamente un error que no ejecute más el código (?) */
 				return false;
 			}
@@ -101,13 +114,12 @@ function drawTheBestProduct() {
 	productImageLink.href = `${link}`;
 	productImage.src = `${image}`;
 	productTitle.innerText = `${title}`;
-	productPrice.innerText = `$${price}`;
-	if (bestProductByPrice.installments !== null) {
+	if (price) productPrice.innerText = `$${price}`;
+	if (bestProductByPrice.installments) {
 		installmentsAmount = `En ${bestProductByPrice.installments.quantity} cuotas de $${bestProductByPrice.installments.amount}`;
 		productInstallments.innerText = `${installmentsAmount}`;
 	}
 	productDescriptionParagraph.innerText = `${description}`;
-	prices = [];
 }
 
 /* Para borrar los guiones (?) */

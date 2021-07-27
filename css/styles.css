@@ -143,6 +143,8 @@ main .product__image-and-basics .product__image img {
 main .product__image-and-basics .product__basics {
 	margin-top: 2rem;
 	color: var(--white);
+	text-align: center;
+	width: 100%;
 }
 @media (min-width: 768px) {
 	main .product__image-and-basics .product__basics {
@@ -155,7 +157,6 @@ main .product__image-and-basics .product__basics h2.product__title {
 	font-weight: 700;
 	line-height: 1.4;
 	margin-bottom: 2rem;
-	text-align: center;
 }
 @media (min-width: 768px) {
 	main .product__image-and-basics .product__basics h2.product__title {
