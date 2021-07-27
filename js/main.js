@@ -1,9 +1,7 @@
 // --- COSAS QUE ME GUSTARIA MEJORAR --- //
 
-/* - PONER UN LOADER HASTA QUE SE CARGUE EL PRODUCTO */
 /* - NO SÉ POR QUE LOS GUIONES Y LAS PALABRAS JUNTAS SE VAN DEL CONTORNO */
-/* - NO ENTRA A LOS CATCHS */
-/* - SI HAY ESPACIOS LARGOS NO ENCUENTRA BIEN LOS RESULTADOS */
+/* - NO ENTRA A LOS CATCHS NO SÉ PQ */
 
 // ------------------------------------- //
 
@@ -26,8 +24,9 @@ const productTitle = $('.product__title');
 const productPrice = $('.product__price');
 const productInstallments = $('.product__installments');
 const productDescriptionParagraph = $('.product__description-paragraph');
+const loader = $('.bx-spin');
 
-let userQuery; /* What the user types */
+let userQuery; /* What the user types in the input */
 
 inputBrowser.addEventListener('input', (e) => {
 	userQuery = e.target.value.toLowerCase().trim();
@@ -37,7 +36,6 @@ inputBrowser.addEventListener('input', (e) => {
 buttonForm.addEventListener('click', (e) => {
 	e.preventDefault();
 	if (userQuery !== undefined && userQuery !== '') {
-		console.log(userQuery);
 		showResults();
 	}
 	inputBrowser.value = '';
@@ -51,17 +49,18 @@ let price; /* Price of the product */
 let installmentsAmount; /* Installments of the product  */
 let prices = []; /* All the product's prices founded */
 let bestPrice; /* The best price of the product's prices founded */
-let results; /* Products coincidences with the user query */
+let results; /* Products results with the user query */
 let resultsTitle = []; /* Array with the result's titles */
+let coincidences = []; /* Product's title coincidences with the user query */
 let bestProductByPrice; /* The cheapest product */
-
-let coincidences = [];
 
 // Function that interacts with the API
 async function showResults() {
 	await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${userQuery}`)
 		.then((response) => response.json())
 		.then((json) => {
+			loader.style.display = 'block';
+			productInformation.style.display = 'none';
 			prices = [];
 			resultsTitle = [];
 			coincidences = [];
@@ -73,48 +72,54 @@ async function showResults() {
 					prices.push(results[r].price);
 				}
 			}
-			prices.sort((a, b) => {
-				return a - b;
-			});
-			if (coincidences.length === 0) {
-				alert('No se han encontrado resultados');
-				productInformation.style.display = 'none';
-				return false;
-			}
-			for (let i = 0; i < coincidences.length; i++) {
-				bestPrice = coincidences[i].price;
-				if (bestPrice === prices[0]) {
-					bestProductByPrice = coincidences[i];
-					title = bestProductByPrice.title;
-					link = bestProductByPrice.permalink;
-					image = bestProductByPrice.thumbnail;
-					price = bestProductByPrice.price;
-				}
-			}
+			console.log(coincidences, 'coincidences');
 		})
 		.catch((error) => console.error(error));
 
-	await fetch(`https://api.mercadolibre.com/items/${bestProductByPrice.id}/description`)
-		.then((response) => response.json())
-		.then((json) => {
-			if (coincidences.length === 0) {
-				/* Ver alguna manera para no poner esto otra vez y tirar directamente un error que no ejecute más el código (?) */
-				return false;
-			}
-			description = json.plain_text;
-			// deleteHyphens(); /* Para borrar los guiones (?) */
-			description !== '' ? (description = json.plain_text) : (description = 'El vendedor no colocó ninguna descripción');
-			drawTheBestProduct();
-		})
-		.catch((error) => console.error(error));
+	if (coincidences.length === 0) {
+		alert('No se han encontrado resultados');
+		loader.style.display = 'none';
+		productInformation.style.display = 'none';
+		return false;
+	} else {
+		getTheCheapestProduct();
+		await fetch(`https://api.mercadolibre.com/items/${bestProductByPrice.id}/description`)
+			.then((response) => response.json())
+			.then((json) => {
+				description = json.plain_text;
+				// deleteHyphens(); /* Para borrar los guiones (?) */
+				description !== '' ? (description = json.plain_text) : (description = 'El vendedor no colocó ninguna descripción');
+				drawTheBestProduct();
+			})
+			.catch((error) => console.error(error));
+	}
+}
+
+function getTheCheapestProduct() {
+	prices.sort((a, b) => {
+		return a - b;
+	});
+	for (let i = 0; i < coincidences.length; i++) {
+		bestPrice = coincidences[i].price;
+		if (bestPrice === prices[0]) {
+			bestProductByPrice = coincidences[i];
+			console.log(bestProductByPrice); /* Sold quantity no es el mismo que los vendidos en el articulo (?) */
+			title = bestProductByPrice.title;
+			link = bestProductByPrice.permalink;
+			image = bestProductByPrice.thumbnail;
+			price = bestProductByPrice.price;
+		}
+	}
 }
 
 function drawTheBestProduct() {
+	loader.style.display = 'none';
 	productInformation.style.display = 'block';
 	productImageLink.href = `${link}`;
 	productImage.src = `${image}`;
 	productTitle.innerText = `${title}`;
-	if (price) productPrice.innerText = `$${price}`;
+	if (price)
+		productPrice.innerText = `$${price}`; /* Puse la condición porque busque un articulo que no tenia precio y tiraba precio $null */
 	if (bestProductByPrice.installments) {
 		installmentsAmount = `En ${bestProductByPrice.installments.quantity} cuotas de $${bestProductByPrice.installments.amount}`;
 		productInstallments.innerText = `${installmentsAmount}`;

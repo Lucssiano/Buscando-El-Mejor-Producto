@@ -89,6 +89,12 @@ header button.find-product {
 /* ################# */
 
 /* ### MAIN #### */
+main .product i.bx-spin {
+	margin-top: 2rem;
+	color: var(--light-green);
+	font-size: 20rem;
+	display: none;
+}
 main .product .product__information {
 	margin: 2rem 0 4rem 0;
 	padding: 2rem;
